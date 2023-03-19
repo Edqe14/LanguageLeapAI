@@ -1,7 +1,7 @@
 import wave
 from os import getenv
 from pathlib import Path
-from time import sleep
+from time import sleep, time
 
 import deepl
 import googletrans
@@ -29,6 +29,7 @@ FORMAT = pyaudio.paInt16
 def on_press_key(_):
     global frames, recording, stream
     if not recording:
+        print('Recording...')
         frames = []
         recording = True
         stream = p.open(format=FORMAT,
@@ -46,9 +47,12 @@ def on_release_key(_):
     stream.close()
     stream = None
 
+    print('Finished Recording')
+
     # if empty audio file
     if not frames:
         print('No audio file to transcribe detected.')
+        print('')
         return
 
     # write microphone audio to file
@@ -58,6 +62,8 @@ def on_release_key(_):
     wf.setframerate(MIC_SAMPLING_RATE)
     wf.writeframes(b''.join(frames))
     wf.close()
+
+    start = time()
 
     # transcribe audio
     try:
@@ -82,8 +88,13 @@ def on_release_key(_):
     else:
         print('No speech detected.')
 
+    print(f'Everything took {time() - start} seconds.')
+    print('')
+
 
 if __name__ == '__main__':
+    # speak('むかしあるところに、ジャックという男の子がいました。ジャックはお母さんと一緒に住んでいました。', 'ja')
+
     p = pyaudio.PyAudio()
 
     # get channels and sampling rate of mic

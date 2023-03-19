@@ -1,5 +1,7 @@
 from os import getenv
 from pathlib import Path
+from time import time
+from pyaudio import Stream
 
 import requests
 from dotenv import load_dotenv
@@ -13,10 +15,13 @@ SAMPLE_EN_FILEPATH = Path(__file__).resolve().parent.parent / r'audio\samples\en
 
 
 def transcribe(filepath):
+    start = time()
+
     try:
         with open(filepath, 'rb') as infile:
             files = {'audio_file': infile}
             r = requests.post(f'{BASE_URL}/asr?task=transcribe&language=en&output=json', files=files)
+            # r = requests.post(f'{BASE_URL}/asr?task=transcribe&language=en&output=json', data=infile, headers={'Content-Type': 'audio/wav'})
 
     except requests.exceptions.Timeout:
         print('Request timeout')
@@ -26,8 +31,13 @@ def transcribe(filepath):
         print('Unable to reach Whisper, ensure that it is running, or the WHISPER_BASE_URL variable is set correctly')
         return None
 
-    return r.json()['text'].strip()
+    print(f'Transcription took {time() - start} seconds')
 
+    text = r.json()['text'].strip()
+    if text == 'you':
+        return None
+
+    return text
 
 def translate(filepath, language):
     try:
